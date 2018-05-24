@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# coding: UTF-8
+
 # VASP POTCAR作成スクリプト
 # 使い方
 # python potcar.py H Cu S N
