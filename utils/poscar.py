@@ -1,7 +1,7 @@
+"""VASP POSCAR作成スクリプト"""
 #!/usr/bin/python
 # coding: UTF-8
 
-# VASP POSCAR作成スクリプト
 # 使い方
 # python potcar.py　hogehoge.gjf
 # 引数に渡したgjfのパスを元にposcarを生成
@@ -17,6 +17,7 @@ lines = gjf_file.readlines()
 gjf_file.close()
 
 # 必要な情報を抜き出す
+element_nums = []
 element_nums = []
 element_cartesian_data = []
 translation_vector_cartesian_data = []
@@ -34,9 +35,9 @@ for line in lines:
     if (count >= start_num and len(line_data) == 4):
          # 原子カウントロジック
         if (line_data[0] != element):
-            if (element_num != 0): 
+            if (element_num != 0):
                 element_nums.append(element_num)
-            
+
             element_num = 0
             element = line_data[0]
 
@@ -49,8 +50,8 @@ for line in lines:
             del line_data[0]
             element_cartesian_data.append(line_data)
 
-       
-    count+=1
+
+    count+= 1
 
 # デバック用
 # print(len(element_cartesian_data))
