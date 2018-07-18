@@ -3,5 +3,5 @@ docker run \
     --rm \
     -w /home \
     -v $PWD/practice:/home \
-    continuumio/anaconda3 \
+    chem/python \
     bash
