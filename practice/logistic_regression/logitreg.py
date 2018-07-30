@@ -76,16 +76,16 @@ def my_logit_reg(trainX, trainY):
     gd_lr = MyLogisticRegression(eta=0.0001, epoch=30000)
     gd_lr.fitByGD(trainX, trainY)
     coeff, intercept = gd_lr.result()
-    probability = gd_lr.probability(trainX, trainY)
+    probability = gd_lr.probability(trainX)
     time1 = time.time()
     gd_lr.loss_plot('gd_')
 
     # ミニバッチ確率的勾配降下法
     timing2 = time.time()
-    msgd_lr = MyLogisticRegression(epoch=32500, batch_size=10)
+    msgd_lr = MyLogisticRegression(epoch=30000, batch_size=50)
     msgd_lr.fitByMSGD(trainX, trainY)
     c, i = msgd_lr.result()
-    p = msgd_lr.probability(trainX, trainY)
+    p = msgd_lr.probability(trainX)
     time2 = time.time()
     msgd_lr.loss_plot('msgd_')
 
@@ -97,7 +97,7 @@ def my_logit_reg(trainX, trainY):
     print("intercept_")
     print(intercept)
     print("Possibility")
-    print(probability)
+    print(probability[0])
     print("\nMSGD")
     print("================================================")
     print("CPU time:", (time2 - timing2)*1000, "msecond")
@@ -106,7 +106,7 @@ def my_logit_reg(trainX, trainY):
     print("intercept_")
     print(i)
     print("Possibility")
-    print(p)
+    print(p[0], "\n")
     plot_fig(trainX, coeff, intercept, "my_logit_reg")
 
 # コードが長くなる & 調整したいパラメータが多いためclassを作成した
@@ -178,13 +178,10 @@ class MyLogisticRegression:
         return w[1:3], w[0]
 
     # calculate probability
-    def probability(self, x, t):
+    def probability(self, x):
         x = np.insert(x, 0, 1, axis=1)
-        w = self.w_list[-1]
-        class_1, class_2 = x[t == 0], x[t == 1]
-        p1 = np.sum(self.__predict(class_1, w)) / class_1.shape[0]
-        p2 = np.sum(self.__predict(class_2, w)) / class_2.shape[0]
-        return [p1, p2][::-1]
+        p = self.__predict(x, self.w_list[-1]) # label:1となる確率
+        return np.concatenate([1-p, p], axis=1)
 
     def loss_plot(self, name=''):
         fig = plt.figure()
