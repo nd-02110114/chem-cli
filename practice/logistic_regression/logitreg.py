@@ -74,7 +74,7 @@ def my_logit_reg(trainX, trainY):
 
     # 勾配降下法
     gd_lr = MyLogisticRegression(eta=0.0001, epoch=30000)
-    gd_lr.fitByGD(trainX, trainY)
+    gd_lr.fit_gd(trainX, trainY)
     coeff, intercept = gd_lr.result()
     probability = gd_lr.probability(trainX)
     time1 = time.time()
@@ -83,11 +83,19 @@ def my_logit_reg(trainX, trainY):
     # ミニバッチ確率的勾配降下法
     timing2 = time.time()
     msgd_lr = MyLogisticRegression(epoch=30000, batch_size=50)
-    msgd_lr.fitByMSGD(trainX, trainY)
+    msgd_lr.fit_msgd(trainX, trainY)
     c, i = msgd_lr.result()
     p = msgd_lr.probability(trainX)
     time2 = time.time()
     msgd_lr.loss_plot('msgd_')
+
+    # 解析解
+    timing3 = time.time()
+    analy_lr = MyLogisticRegression()
+    analy_lr.fit_analytic(trainX, trainY)
+    c_a, i_a = analy_lr.result()
+    p_a = analy_lr.probability(trainX)
+    time3 = time.time()
 
     print("\nGD")
     print("================================================")
@@ -96,8 +104,9 @@ def my_logit_reg(trainX, trainY):
     print(coeff)
     print("intercept_")
     print(intercept)
-    print("Possibility")
+    print("Probability")
     print(probability[0])
+    plot_fig(trainX, coeff, intercept, "gd_reg")
     print("\nMSGD")
     print("================================================")
     print("CPU time:", (time2 - timing2)*1000, "msecond")
@@ -105,9 +114,19 @@ def my_logit_reg(trainX, trainY):
     print(c)
     print("intercept_")
     print(i)
-    print("Possibility")
-    print(p[0], "\n")
-    plot_fig(trainX, coeff, intercept, "my_logit_reg")
+    print("Probability")
+    print(p[0])
+    plot_fig(trainX, c, i, "msgd_reg")
+    print("\nAnalytic Solution")
+    print("================================================")
+    print("CPU time:", (time3 - timing3)*1000, "msecond")
+    print("Coefficient:")
+    print(c_a)
+    print("intercept_")
+    print(i_a)
+    print("Probability")
+    print(p_a[0], "\n")
+    plot_fig(trainX, c_a, i_a, "analytic_reg")
 
 # コードが長くなる & 調整したいパラメータが多いためclassを作成した
 class MyLogisticRegression:
@@ -134,7 +153,7 @@ class MyLogisticRegression:
         return - np.dot(x.T, (t[:, np.newaxis] - activate))
 
     # x:input t:label
-    def fitByGD(self, x, t):
+    def fit_gd(self, x, t):
         x = np.insert(x, 0, 1, axis=1)   # バイアス用に全ての行に１を加える
         W = np.ones((3, 1))              # 重みの初期値
         self.w_list = []
@@ -149,7 +168,7 @@ class MyLogisticRegression:
             self.w_list.append(W)
             self.loss_list.append(loss)
 
-    def fitByMSGD(self, x, t):
+    def fit_msgd(self, x, t):
         x = np.insert(x, 0, 1, axis=1)   # バイアス用に全ての行に１を加える
         W = np.ones((3, 1))              # 重みの初期値
         self.w_list = []
@@ -171,6 +190,17 @@ class MyLogisticRegression:
                 W -= self.eta * self.__gradient(tmp_x, tmp_t, activate)
                 self.w_list.append(W)
                 self.loss_list.append(loss)
+
+    # 解析解
+    def fit_analytic(self, x, t):
+        self.w_list = []
+        self.loss_list = []
+        x = np.matrix(np.insert(x, 0, 1, axis=1))
+        t = np.matrix(t).T
+        dt = 1e-10
+        t = np.where(t == 1, 1 - dt, dt)        # log0が計算できないための調整
+        W = np.linalg.inv(x.T * x) * x.T * (np.log(t)-np.log(np.ones((t.shape[0], 1)) - t))
+        self.w_list.append(np.array(W))
 
     # return coeff, intercept
     def result(self):
