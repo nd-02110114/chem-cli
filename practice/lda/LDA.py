@@ -88,6 +88,7 @@ def my_LDA(trainX, trainY):
     # 1.fisher線形分別法による解法
     # まずクラスを分ける
     class_a = trainX[np.where(trainY==0)]
+    # class_a = trainX[trainY==0] // これの方がスマート
     class_b = trainX[np.where(trainY==1)]
     # 平均を算出
     class_a_ave = np.mean(class_a, axis=0)
@@ -95,6 +96,8 @@ def my_LDA(trainX, trainY):
     # 総クラス内分散を求める
     a = class_a - class_a_ave
     b = class_b - class_b_ave
+    # 以下の方がスマート
+    # a_var = np.conv(a, rowvar=0, bias=0)
     a_var = np.sum(np.array([np.dot(np.reshape(a[i], [2,1]), np.reshape(a[i], [2,1]).T) for i in range(a.shape[0])]), axis=0)
     b_var = np.sum(np.array([np.dot(np.reshape(b[i], [2,1]), np.reshape(b[i], [2,1]).T) for i in range(b.shape[0])]), axis=0)
     sw = a_var + b_var
