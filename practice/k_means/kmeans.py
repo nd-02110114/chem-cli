@@ -90,6 +90,13 @@ class MyKmeans:
     def __assign(self, x, center):
         return np.apply_along_axis(self.__cal_label, 1, x, center)
 
+    # # __update_centerは以下でもかけるが, 正しくクラスタリングされないことが多くなった
+    # def __cal_center(self, x, label, target):
+    #     return np.mean(x[label == target], axis=0).tolist()
+
+    # def __update_center(self, x, label):
+    #     return [self.__cal_center(x, label, int(i)) for i in range(3)]
+
     def __update_center(self, x, label):
         center_0 = np.mean(x[label == 0], axis=0).tolist()
         center_1 = np.mean(x[label == 1], axis=0).tolist()
