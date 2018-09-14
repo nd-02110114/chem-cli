@@ -137,7 +137,7 @@ def my_lr_lasso(trainX, trainY):
     header("Original lasso")
     timing = time.time()
 
-    my_lasso = LinearRegression(alpha=0.01, epoch=10000)
+    my_lasso = LinearRegression(alpha=0.01, epoch=1000)
     my_lasso.cal_w_by_lasso(trainX, trainY)
     print("CPU time:", (time.time() - timing)*1000, "msecond")
     print("Coeff.:", my_lasso.lasso_coef_)
@@ -188,18 +188,11 @@ class LinearRegression:
         self.alpha = alpha              # alpha
         self.eta = eta                  # learning_rate
         self.epoch = epoch              # epoch
-        self.loss_list = []             # loss function list
         self.lasso_coef_ = None         # lasso coef
         self.lasso_intercept_ = None    # lasso intercept
 
     def cal_w_by_ridge(self, x, t):
         return np.dot(np.linalg.inv(np.dot(x.T, x) + self.alpha * np.eye(x.shape[1])), np.dot(x.T, t))
-
-    def loss_plot(self, name=''):
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-        ax.plot(np.arange(len(self.loss_list)), self.loss_list)
-        fig.savefig(name + "loss.png")
 
     def _soft_thresholding_operator(self, x, lambda_):
         if x > 0 and lambda_ < abs(x):
