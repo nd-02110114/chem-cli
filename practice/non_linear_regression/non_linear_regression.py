@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn import linear_model
-
+from copy import deepcopy
 
 def loaddata(name):
     """Loading learning data."""
@@ -137,14 +137,11 @@ def my_lr_lasso(trainX, trainY):
     header("Original lasso")
     timing = time.time()
 
-    X = np.insert(trainX, 0, 1, axis=1)
     my_lasso = LinearRegression(alpha=0.01, epoch=10000)
-    my_lasso.cal_w_by_lasso(X, trainY)
-    my_lasso.loss_plot('lasso_')
-    w = my_lasso.lasso_w
+    my_lasso.cal_w_by_lasso(trainX, trainY)
     print("CPU time:", (time.time() - timing)*1000, "msecond")
-    print("Coeff.:", w[1:])
-    print("Intercept:", w[0])
+    print("Coeff.:", my_lasso.lasso_coef_)
+    print("Intercept:", my_lasso.lasso_intercept_)
 
 
 def my_poly_classic(trainX, trainY):
@@ -177,12 +174,13 @@ def my_poly_lasso(trainX, trainY):
     """Your own linear regression for multi variable."""
     header("My own linear regression for multi variable (in L1 regularization)")
     timing = time.time()
-    #
-    # Please construct your Polynomial regression in L1 regularization
-    #
+
+    pr = PolynomialRegression(alpha=0.003, degree=10, epoch=1000) # scikit learnと同じ値を利用
+    phi = pr.create_phi(trainX)
+    pr.cal_w_by_lasso(phi, trainY)
     print("CPU time:", (time.time() - timing)*1000, "msecond")
-    print("Coeff.:", "Please fill coeff. here")
-    print("Intercept:", "Please fill intercept here")
+    print("Coeff.:", pr.lasso_coef_)
+    print("Intercept:", pr.lasso_intercept_)
 
 
 class LinearRegression:
@@ -191,41 +189,11 @@ class LinearRegression:
         self.eta = eta                  # learning_rate
         self.epoch = epoch              # epoch
         self.loss_list = []             # loss function list
-        self.lasso_w = None             # lasso weight
+        self.lasso_coef_ = None         # lasso coef
+        self.lasso_intercept_ = None    # lasso intercept
 
     def cal_w_by_ridge(self, x, t):
         return np.dot(np.linalg.inv(np.dot(x.T, x) + self.alpha * np.eye(x.shape[1])), np.dot(x.T, t))
-
-    def __loss(self, x, t, w):
-        t_reshape = t[:, np.newaxis]
-        loss_func_term = np.sum((t_reshape - np.dot(x, w)) ** 2) / (2 * len(x))
-        regularization_term = self.alpha * np.sum(np.abs(w))
-        return loss_func_term + regularization_term
-
-    def __soft_threshold(self, w, l):
-        if w > l:
-            return w - l
-        elif w < -l:
-            return w + l
-        else:
-            return 0
-
-    def __update_w(self, x, t, w):
-        t_reshape = t[:, np.newaxis]
-        beta = np.dot(x.T, t_reshape - np.dot(x, w))
-        x_sum = (x ** 2).sum(axis=0)
-        grad = np.array([ - self.__soft_threshold(beta[i], len(x) * self.alpha) / x_sum[i] for i in range(w.shape[0])])
-        return grad[:, np.newaxis]
-
-    def cal_w_by_lasso(self, x, t):
-        self.loss_list = []
-        w = np.zeros((x.shape[1], 1))  # 重みの初期値
-        for _ in range(self.epoch):
-            loss = self.__loss(x, t, w)
-            self.loss_list.append(loss)
-            w -= self.eta * self.__update_w(x, t, w)
-
-        self.lasso_w = w.T[0]
 
     def loss_plot(self, name=''):
         fig = plt.figure()
@@ -233,7 +201,35 @@ class LinearRegression:
         ax.plot(np.arange(len(self.loss_list)), self.loss_list)
         fig.savefig(name + "loss.png")
 
+    def _soft_thresholding_operator(self, x, lambda_):
+        if x > 0 and lambda_ < abs(x):
+          return x - lambda_
+        elif x < 0 and lambda_ < abs(x):
+          return x + lambda_
+        else:
+          return 0
 
+    def cal_w_by_lasso(self, X, y):
+        # https://github.com/satopirka/Lasso/blob/master/lasso.py
+        X = np.column_stack((np.ones(len(X)),X))
+
+        beta = np.zeros(X.shape[1])
+        beta[0] = np.sum(y - np.dot(X[:, 1:], beta[1:]))/(X.shape[0])
+        
+        for _ in range(self.epoch):
+          for j in range(1, len(beta)):
+            tmp_beta = deepcopy(beta)
+            tmp_beta[j] = 0.0
+            r_j = y - np.dot(X, tmp_beta)
+            arg1 = np.dot(X[:, j], r_j)
+            arg2 = self.alpha * X.shape[0]
+            beta[j] = self._soft_thresholding_operator(arg1, arg2) / (X[:, j] ** 2).sum()
+            beta[0] = np.sum(y - np.dot(X[:, 1:], beta[1:])) / (X.shape[0])
+
+        self.lasso_intercept_ = beta[0]
+        self.lasso_coef_ = beta[1:]
+
+        return self
 
 class PolynomialRegression(LinearRegression):
     def __init__(self, alpha=0, eta=0.0001, epoch=10000, degree=1):
@@ -252,19 +248,19 @@ if __name__ == '__main__':
     trainX, trainY = loaddata("4_linear_regularize.csv")
     trainX = (trainX - trainX.mean(axis=0)) / trainX.std(axis=0)
     trainY = (trainY - trainY.mean(axis=0)) / trainY.std(axis=0)
-    # sk_lr_ridge(trainX, trainY)
+    sk_lr_ridge(trainX, trainY)
     sk_lr_lasso(trainX, trainY)
-    # my_lr_ridge(trainX, trainY)
+    my_lr_ridge(trainX, trainY)
     my_lr_lasso(trainX, trainY)
 
     # Nonlinear regression process
     trainX, trainY = loaddata("4_nonlinear_1d.csv")
     trainX = (trainX - trainX.mean(axis=0)) / trainX.std(axis=0)
     trainY = (trainY - trainY.mean(axis=0)) / trainY.std(axis=0)
-    # sk_poly_classic(trainX, trainY, 10)
-    # sk_poly_ridge(trainX, trainY, 10)
-    # sk_poly_lasso(trainX, trainY, 10)
+    sk_poly_classic(trainX, trainY, 10)
+    sk_poly_ridge(trainX, trainY, 10)
+    sk_poly_lasso(trainX, trainY, 10)
 
-    # my_poly_classic(trainX, trainY)
-    # my_poly_ridge(trainX, trainY)
-    # my_poly_lasso(trainX, trainY)
+    my_poly_classic(trainX, trainY)
+    my_poly_ridge(trainX, trainY)
+    my_poly_lasso(trainX, trainY)
