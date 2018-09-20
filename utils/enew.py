@@ -46,7 +46,7 @@ class EspressoParcer(Parcer):
             if line.find("End of BFGS Geometry Optimization") != -1:
                 self.conv_flag = True
 
-            if re.match("total energy", line):
+            if re.match(r"total energy|!", line):
                 self.energy.append(re.findall(pattern, line))
 
             if re.match("Self-consistent Calculation", line):
