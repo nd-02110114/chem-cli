@@ -63,7 +63,12 @@ class EspressoParcer(Parcer):
         home = os.environ['HOME']
         tmp_path = self.path
         conv = "ok" if self.conv_flag else "not ok"
-        path = tmp_path.lstrip(home).rstrip('/espresso.out')
+        if re.search('espresso.out', tmp_path):
+            path = tmp_path.lstrip(home).rstrip('/espresso.out')
+
+        if re.search('espresso.opt.out', tmp_path):
+            path = tmp_path.lstrip(home).rstrip('/espresso.opt.out')
+
         return [path] + [conv] + [self.scf_count] + self.energy
 
 class OutcarParcer(Parcer):
