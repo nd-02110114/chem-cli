@@ -14,7 +14,7 @@ $ bin/potcar.py -a H Cu S -p ....
 ```
 
 ## poscar.py
-This script is a automatic creater for POTCAR from .gjf file  
+This script is a automatic creater for POSCAR from .gjf file  
 
 **Usage**
 ```
