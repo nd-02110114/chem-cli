@@ -1,9 +1,9 @@
-# Convert Tool between Gaussian and VASP input file
+# Convert Tool between Gaussian and VASP
 
 This tool is made by forking [vtool](https://github.com/wsunccake/vtool)
 
 ## v2g 
-v2g.py is converted tool  
+v2g.py is convert tool  
 supports VASP input (POSCAR, CONTCAR) to tranform to Gaussian input (.gjf or.com)  
   
 **Usage**
@@ -17,7 +17,7 @@ $ bin/v2g.py -i POSCAR -o xxx.gjf
 ```
 
 ## g2v
-g2v.py is converted tool  
+g2v.py is convert tool  
 supports Gaussian input (.gjf or.com) to tranform to the VASP input (POSCAR)  
   
 **Usage**

@@ -138,7 +138,7 @@ def main():
                 table.append(out_parcer.getData())
 
         print tabulate(table, headers, tablefmt="rst", numalign='center', floatfmt=".8f")
-        
+
     if args.e:
         headers=["directory", "Convegence", "SCF count","Energy (unit: Ry)"]
 
