@@ -26,8 +26,7 @@ TV_COORDINATE_PATTERN = r'crystal axes'
 BOHR_TO_ANG = 0.529177
 
 # gjf template
-GJF_TEMPLATE = """
-%nproc=
+GJF_TEMPLATE = """%nproc=
 %mem=4000MB
 #p 
 
